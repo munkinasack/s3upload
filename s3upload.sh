@@ -3,8 +3,8 @@
 S3CMD="/usr/bin/s3cmd --config=/root/s3cmd.conf"
 S3CMD_UPLOAD="put -r --rr"
 S3CMD_ACL="setacl -r -P"
-DIR="/home/ubuntu/videos"
-BUCKET="s3://munkinasackvideos"
+DIR="Your/full/directory/location"
+BUCKET="Your/Bucket"
 
 # Check for s3cmd
 if [[ -z ${S3CMD} ]]; then
