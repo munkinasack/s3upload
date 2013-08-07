@@ -3,8 +3,8 @@
 S3CMD="/usr/bin/s3cmd --config=/root/s3cmd.conf"
 S3CMD_UPLOAD="put -r --rr"
 S3CMD_ACL="setacl -r -P"
-DIR="Your/full/directory/location"
-BUCKET="Your/Bucket"
+DIR="/home/ubuntu/videos"
+BUCKET="s3://munkinasackvideos"
 
 # Check for s3cmd
 if [[ -z ${S3CMD} ]]; then
@@ -12,20 +12,50 @@ if [[ -z ${S3CMD} ]]; then
 	exit 1
 fi
 
-# Check to see if folders/files are in folder
-#....Find better way to make S3DIR happen
-if [ "$(ls -A $DIR)" ]; then
-	for i in $DIR/*;  do
-	S3DIR=$(basename $i)
-	${S3CMD} ${S3CMD_UPLOAD} ${i} ${BUCKET}
-	${S3CMD} ${S3CMD_ACL} ${BUCKET}/${S3DIR}
+# Check for s3cmd running
+if pidof -x s3cmd > /dev/null
+then
+    exit 1
+fi
+
+if [ "$(ls -A $DIR)" ]; then # Check to see if folders/files are in folder
+	for i in $DIR/*;  do # Process each item
+	 case $i in
+          *.zip) # Is file a zip?
+	   printf "\nUnpacking $i..."
+	   uni=${i##*/} # Get var for just zip file name
+	   uni=${uni%.zip} # Strip away extension
+	   unzip -d "$i" "$DIR/$uni" # Unzip everything put in folder
+	   printf "done.\n Uploading $uni\n"
+           ${S3CMD} ${S3CMD_UPLOAD} "${uni}" ${BUCKET}
+           ${S3CMD} ${S3CMD_ACL} ${BUCKET}/"${uni}"
+	   printf "\nDeleting $i and $uni..." # Delete both folder and zip
+	   rm "$i"
+	   rm -r "$uni"
+	   printf "done.\n"
+	   ;;
+	  *)
+	   if [ -f "$i" ]; then # Is file?
+           printf "\nUploading ${i##*/}\n"
+           ${S3CMD} ${S3CMD_UPLOAD} "${i}" ${BUCKET}
+           ${S3CMD} ${S3CMD_ACL} ${BUCKET}/"${i##*/}"
+            printf "\nDeleting ${i##*/}..."
+            rm "$i"
+            printf "done.\n"
+
+	   elif [ -d "$i" ]; then # Is folder?
+	   S3DIR=${i##*/} # Get folder name for setting ACL
+	   printf "\nUploading folder $S3DIR\n"
+	   ${S3CMD} ${S3CMD_UPLOAD} "${i}" ${BUCKET}
+	   ${S3CMD} ${S3CMD_ACL} ${BUCKET}/"${S3DIR}"
+	    printf "\nDeleting folder $S3DIR..." # Delete folder
+	    rm -r "$i"
+	    printf "done.\n"
+	   fi
+	   ;;
+	esac
 done
 
-#Delete all the files once they've been uploaded to S3
-printf "\nDeleting all folders/files....."
-rm -rf $DIR/*
-printf "Done\n"
-	
 else
 	exit 1
 fi
