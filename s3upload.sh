@@ -3,8 +3,8 @@
 S3CMD="/usr/bin/s3cmd --config=/root/s3cmd.conf"
 S3CMD_UPLOAD="put -r --rr"
 S3CMD_ACL="setacl -r -P"
-DIR="Your/full/directory/location"
-BUCKET="Your/Bucket"
+DIR="/home/ubuntu/videos"
+BUCKET="s3://munkinasackvideos"
 
 # Check for s3cmd
 if [[ -z ${S3CMD} ]]; then
@@ -15,7 +15,8 @@ fi
 # Check for s3cmd running
 if pidof -x s3cmd > /dev/null
 then
-    exit 1
+	printf "...still uploading\n"
+	exit 1
 fi
 
 if [ "$(ls -A $DIR)" ]; then # Check to see if folders/files are in folder
