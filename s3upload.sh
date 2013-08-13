@@ -15,12 +15,8 @@ fi
 # Check for s3cmd running
 if pidof -x s3cmd > /dev/null
 then
-<<<<<<< HEAD
 	printf "...still uploading\n"
 	exit 1
-=======
-    exit 1
->>>>>>> 69810680150a12f589329192b91068e62d27be36
 fi
 
 if [ "$(ls -A $DIR)" ]; then # Check to see if folders/files are in folder
